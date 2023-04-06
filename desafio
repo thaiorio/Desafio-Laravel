@@ -1,87 +1,153 @@
-laravel new DESAFIO
+composer create-project --prefer-dist laravel/laravel crud
+php artisan make:model Product -m
 
-migração para a tabela de produtos php artisan make:migration create_products_table --create=products
-
-Schema::create('products', function (Blueprint $table) {
-    $table->id();
-    $table->string('name');
-    $table->text('description');
-    $table->decimal('price', 8, 2);
-    $table->timestamps();
-});
-
-class ProductController extends Controller
+public function up()
 {
-    public function index()
-    {
-        $products = Product::all();
-
-        return view('products.index', compact('products'));
-    }
-
-    public function create()
-    {
-        return view('products.create');
-    }
-
-    public function store(Request $request)
-    {
-        $product = new Product;
-        $product->name = $request->name;
-        $product->description = $request->description;
-        $product->price = $request->price;
-        $product->save();
-
-        return redirect()->route('products.index');
-    }
-
-    public function edit(Product $product)
-    {
-        return view('products.edit', compact('product'));
-    }
-
-    public function update(Request $request, Product $product)
-    {
-        $product->name = $request->name;
-        $product->description = $request->description;
-        $product->price = $request->price;
-        $product->save();
-
-        return redirect()->route('products.index');
-    }
-
-    public function destroy(Product $product)
-    {
-        $product->delete();
-
-        return redirect()->route('products.index');
-    }
+    Schema::create('products', function (Blueprint $table) {
+        $table->id();
+        $table->string('name');
+        $table->text('description')->nullable();
+        $table->decimal('price', 8, 2);
+        $table->timestamps();
+    });
 }
 
-rotas do arquivo web.php
+php artisan make:controller ProductController --resource
 
-Route::get('products', 'ProductController@index')->name('products.index');
-Route::get('products/create', 'ProductController@create')->name('products.create');
-Route::post('products', 'ProductController@store')->name('products.store');
-Route::get('products/{product}/edit', 'ProductController@edit')->name('products.edit');
-Route::put('products/{product}', 'ProductController@update')->name('products.update');
-Route::delete('products/{product}', 'ProductController@destroy')->name('products.destroy');
+Route::resource('products', ProductController::class);
 
-index.blade.php
+public function store(Request $request)
+{
+    $product = new Product;
+    $product->name = $request->input('name');
+    $product->description = $request->input('description');
+    $product->price = $request->input('price');
+    $product->save();
 
-@extends('layouts.app')
+    return redirect()->route('products.index');
+}
 
-@section('content')
-    <a href="{{ route('products.create') }}" class="btn btn-primary mb-2">Novo produto</a>
+public function update(Request $request, $id)
+{
+    $product = Product::findOrFail($id);
+    $product->name = $request->input('name');
+    $product->description = $request->input('description');
+    $product->price = $request->input('price');
+    $product->save();
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nome</th>
-                <th>Descrição</th>
-                <th>Preço</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody>
+    return redirect()->route('products.index');
+}
+
+public function destroy($id)
+{
+    $product = Product::findOrFail($id);
+    $product->delete();
+
+    return redirect()->route('products.index');
+}
+
+php artisan make:view products.index
+php artisan make:view products.create
+php artisan make:view products.edit
+
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>Descrição</th>
+        <th>Preço</th>
+        <th>Ações</th>
+    </tr>
+    @foreach ($products as $product)
+    <tr>
+        <td>{{ $product->id }}</td>
+        <td>{{ $product->name }}</td>
+        <td>{{ $product->description }}</td>
+        <td>{{ $product->price }}</td>
+        <td>
+            <a href="{{ route('products.edit', $product->id) }}">Editar</a>
+            <form method="POST" action="{{ route('products.destroy', $product->id) }}">
+                @csrf
+                @method('DELETE
+                
+Route::get('products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
+
+public function edit($id)
+{
+    $product = Product::findOrFail($id);
+    return view('products.edit', compact('product'));
+}
+
+php artisan make:view products.edit
+
+<form method="POST" action="{{ route('products.update', $product->id) }}">
+    @csrf
+    @method('PUT')
+    <div>
+        <label for="name">Nome:</label>
+        <input type="text" name="name" value="{{ $product->name }}" />
+    </div>
+    <div>
+        <label for="description">Descrição:</label>
+        <textarea name="description">{{ $product->description }}</textarea>
+    </div>
+    <div>
+        <label for="price">Preço:</label>
+        <input type="text" name="price" value="{{ $product->price }}" />
+    </div>
+    <div>
+        <button type="submit">Salvar</button>
+    </div>
+</form>
+
+public function update(Request $request, $id)
+{
+    $product = Product::findOrFail($id);
+    $product->name = $request->input('name');
+    $product->description = $request->input('description');
+    $product->price = $request->input('price');
+    $product->save();
+
+    return redirect()->route('products.index');
+}
+
+Route::get('products/create', [ProductController::class, 'create'])->name('products.create');
+
+public function create()
+{
+    return view('products.create');
+}
+
+php artisan make:view products.create
+
+<form method="POST" action="{{ route('products.store') }}">
+    @csrf
+    <div>
+        <label for="name">Nome:</label>
+        <input type="text" name="name" />
+    </div>
+    <div>
+        <label for="description">Descrição:</label>
+        <textarea name="description"></textarea>
+    </div>
+    <div>
+        <label for="price">Preço:</label>
+        <input type="text" name="price" />
+    </div>
+    <div>
+        <button type="submit">Salvar</button>
+    </div>
+</form>
+
+public function store(Request $request)
+{
+    $validatedData = $request->validate([
+        'name' => 'required|max:255',
+        'description' => 'required',
+        'price' => 'required|numeric',
+    ]);
+
+    Product::create($validatedData);
+
+    return redirect()->route('products.index');
+}
