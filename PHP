@@ -1,0 +1,96 @@
+
+CREATE TABLE products (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    price DECIMAL(8, 2) NOT NULL
+);
+
+<?php
+
+$host = 'localhost';
+$dbname = 'nome_do_banco_de_dados';
+$user = 'nome_do_usuario';
+$password = 'senha_do_usuario';
+
+try {
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname", $user, $password);
+} catch (PDOException $e) {
+    echo 'Erro de conexão: ' . $e->getMessage();
+}
+<?php
+
+require 'config.php';
+
+$stmt = $pdo->prepare('SELECT * FROM products');
+$stmt->execute();
+$products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+?>
+
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>Descrição</th>
+        <th>Preço</th>
+        <th>Ações</th>
+    </tr>
+    <?php foreach ($products as $product) : ?>
+    <tr>
+        <td><?= $product['id'] ?></td>
+        <td><?= $product['name'] ?></td>
+        <td><?= $product['description'] ?></td>
+        <td><?= $product['price'] ?></td>
+        <td>
+            <a href="edit.php?id=<?= $product['id'] ?>">Editar</a>
+            <a href="delete.php?id=<?= $product['id'] ?>">Excluir</a>
+        </td>
+    </tr>
+    <?php endforeach ?>
+</table>
+
+<?php
+
+require 'config.php';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $name = $_POST['name'];
+    $description = $_POST['description'];
+    $price = $_POST['price'];
+
+    $stmt = $pdo->prepare('INSERT INTO products (name, description, price) VALUES (?, ?, ?)');
+    $stmt->execute([$name, $description, $price]);
+
+    header('Location: index.php');
+    exit;
+}
+?>
+
+<form method="post">
+    <div>
+        <label for="name">Nome:</label>
+        <input type="text" id="name" name="name" required>
+    </div>
+    <div>
+        <label for="description">Descrição:</label>
+        <textarea id="description" name="description"></textarea>
+    </div>
+    <div>
+        <label for="price">Preço:</label>
+        <input type="text" id="price" name="price" required>
+    </div>
+    <div>
+        <button type="submit">Salvar</button>
+    </div>
+</form>
+
+<?php
+
+require 'config.php';
+
+$id = $_GET['id'];
+
+$stmt = $pdo->prepare('SELECT * FROM products WHERE id = ?');
+$stmt->execute([$id]);
+$product = $stmt->fetch(PDO::
