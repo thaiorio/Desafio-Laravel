@@ -73,7 +73,7 @@ $id = $_GET['id'];
 
 // Selecionar produto pelo ID
 $stmt = $pdo->prepare('SELECT * FROM products WHERE id = :id');
-$stmt->bindParam(':id', $id, PDO::PARAM_INT);
+$stmt->bindParam('id', $id, PDO::PARAM_INT);
 $stmt->execute([$id]);
 $product = $stmt->fetch(PDO::FETCH_ASSOC);
 ?>
